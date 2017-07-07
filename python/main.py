@@ -6,14 +6,14 @@ import json
 import logging
 import random
 import webapp2
-w=[1,0.75,2,6,-3,20]
+w=[1,0.75,2,6,-3,20,-5]
 score_board=[[w[5],w[4],w[3],w[3],w[3],w[3],w[4],w[5]],
-			[w[4],w[4],w[2],w[2],w[2],w[2],w[4],w[4]],
+			[w[4],w[6],w[2],w[2],w[2],w[2],w[6],w[4]],
 			[w[3],w[2],w[3],w[1],w[1],w[3],w[2],w[3]],
 			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
 			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
 			[w[3],w[2],w[3],w[1],w[1],w[3],w[2],w[3]],
-			[w[4],w[4],w[2],w[2],w[2],w[2],w[4],w[4]],
+			[w[4],w[6],w[2],w[2],w[2],w[2],w[6],w[4]],
 			[w[5],w[4],w[3],w[3],w[3],w[3],w[4],w[5]]]
 
 # Reads json description of the board and provides simple interface.
