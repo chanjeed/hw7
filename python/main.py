@@ -30,37 +30,38 @@ class Game:
 	#Evaluate score for Player1 to win the game
 	def Find_score(self):
 		
-		score=0
+		score1=0
+		score2=0
 		for i in range(8):
 			for j in range(8):
 				if self._board['Pieces'][i][j]==1:
-					score+=score_board[i][j];
+					score1+=score_board[i][j];
 				if self._board['Pieces'][i][j]==2:
-					score-=score_board[i][j];
+					score2+=score_board[i][j];
 		# Extra score for adjacent corner
 		if self._board['Pieces'][0][0]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==1):
-			score+=2
+			score1+=2
 		if self._board['Pieces'][0][7]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][0]==1):
-			score+=2
+			score1+=2
 		if self._board['Pieces'][7][0]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][7]==1):
-			score+=2
+			score1+=2
 		if self._board['Pieces'][7][7]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==1):
-			score+=2
+			score1+=2
 		if self._board['Pieces'][0][0]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==2):
-			score-=2
+			score2+=2
 		if self._board['Pieces'][0][7]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][0]==2):
-			score-=2
+			score2+=2
 		if self._board['Pieces'][7][0]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][7]==2):
-			score-=2
+			score2+=2
 		if self._board['Pieces'][7][7]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==2):
-			score-=2
+			score2+=2
 		#Extra score for next valid moves
 		valid_moves=self.ValidMoves()
 		if self.Next()==1:
-			score+=w[0]*len(valid_moves)
+			score1+=w[0]*len(valid_moves)
 		else:
-			score-=w[0]*len(valid_moves)
-		return score
+			score2+=w[0]*len(valid_moves)
+		return 100*(score1-score2)/(score1+score2)
 	# Returns piece on the board.
 	# 0 for no pieces, 1 for player 1, 2 for player 2.
 	# None for coordinate out of scope.
