@@ -6,13 +6,13 @@ import json
 import logging
 import random
 import webapp2
-w=[0.5,1,2,5,-3,10]
+w=[1,1,2,6,-3,20]
 score_board=[[w[5],w[4],w[3],w[3],w[3],w[3],w[4],w[5]],
 			[w[4],w[4],w[2],w[2],w[2],w[2],w[4],w[4]],
+			[w[3],w[2],w[3],w[1],w[1],w[3],w[2],w[3]],
 			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
 			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
-			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
-			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
+			[w[3],w[2],w[3],w[1],w[1],w[3],w[2],w[3]],
 			[w[4],w[4],w[2],w[2],w[2],w[2],w[4],w[4]],
 			[w[5],w[4],w[3],w[3],w[3],w[3],w[4],w[5]]]
 
@@ -37,6 +37,7 @@ class Game:
 					score+=score_board[i][j];
 				if self._board['Pieces'][i][j]==2:
 					score-=score_board[i][j];
+		# Extra score for adjacent corner
 		if self._board['Pieces'][0][0]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==1):
 			score+=2
 		if self._board['Pieces'][0][7]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][0]==1):
@@ -53,6 +54,7 @@ class Game:
 			score-=2
 		if self._board['Pieces'][7][7]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==2):
 			score-=2
+		#Extra score for next valid moves
 		valid_moves=self.ValidMoves()
 		if self.Next()==1:
 			score+=w[0]*len(valid_moves)
@@ -192,7 +194,68 @@ class Game:
     					best_move=move
     		return best_move
 
+	def alphabeta_recursive(self,valid_moves,depth,alpha,beta):
+		
 
+		if depth==1:
+    			score=self.Find_score()
+			return score
+
+		
+		next_player=self.Next()
+	
+		if len(valid_moves)!=0:
+			if next_player==1:
+    				for current_move in valid_moves:
+    					new_board=self.NextBoardPosition(current_move)
+    					new_valid_moves=new_board.ValidMoves()
+    				
+    					alpha=max(alpha,new_board.alphabeta_recursive(new_valid_moves,depth-1,alpha,beta))
+    			
+    					if alpha>=beta:
+    						break #prune
+   				return alpha
+    					
+    			elif next_player==2:
+    				for current_move in valid_moves:
+    					new_board=self.NextBoardPosition(current_move)
+    					new_valid_moves=new_board.ValidMoves()
+    					
+    					beta=min(beta,new_board.alphabeta_recursive(new_valid_moves,depth-1,alpha,beta))
+    					
+    					if alpha>=beta:
+    						break #prune
+    				return beta
+    		else:
+    			new_board=self
+    			new_board._board['Next']=3-new_board._board['Next']
+    			new_valid_moves=new_board.ValidMoves()
+    			if next_player==1:
+    				return max(alpha,new_board.alphabeta_recursive(new_valid_moves,depth-1,alpha,beta))
+    			elif next_player==2:
+    				return min(beta,new_board.alphabeta_recursive(new_valid_moves,depth-1,alpha,beta))
+
+
+    	def alphabeta(self,valid_moves,depth,alpha,beta):
+    		next_player=self.Next()
+ 		if next_player==1:
+			best_score=-99999
+		elif next_player==2:
+			best_score=99999
+		best_move=None   		
+    		for move in valid_moves:
+    			new_board=self.NextBoardPosition(move)
+    			new_valid_moves=new_board.ValidMoves()
+    			score=new_board.alphabeta_recursive(new_valid_moves,depth-1,alpha,beta)
+    			if next_player==1:
+    				if score>best_score:
+    					best_score=score
+    					best_move=move
+    			else:
+    				if score<best_score:
+    					best_score=score
+    					best_move=move
+    		return best_move
 
 # Returns piece on the board.
 # 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -262,7 +325,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
          # TO STEP STUDENTS:
          # You'll probably want to change how this works, to do something
          # more clever than just picking a random move.
-         best_move = g.choose_bestmove(valid_moves,3)
+         best_move = g.alphabeta(valid_moves,3,-99999,99999)
          self.response.write(PrettyMove(best_move))
 
 app = webapp2.WSGIApplication([
