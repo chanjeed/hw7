@@ -11,12 +11,29 @@ import webapp2
 class Game:
 	# Takes json or a board directly.
 	def __init__(self, body=None, board=None):
-                if body:
-		        game = json.loads(body)
-                        self._board = game["board"]
-                else:
-                        self._board = board
+		score=0
+		if body:
+         		game = json.loads(body)
+         		self._board = game["board"]
+         	else:
+         		self._board = board
 
+	#Evaluate score for Player1 to win the game
+	def Find_score(self):
+		score_board=[[5,-2,3,2,2,3,-2,5],
+					[-2,-2,3,2,2,3,-2,-2],
+					[3,3,3,1,1,3,3,3],
+					[2,2,1,1,1,1,2,2],
+					[2,2,1,1,1,1,2,2],
+					[3,3,3,1,1,3,3,3],
+					[-2,-2,3,2,2,3,-2,-2],
+					[5,-2,3,2,2,3,-2,5]]
+		score=0
+		for i in range(8):
+			for j in range(8):
+				if self._board['Pieces'][i][j]==1:
+					score+=score_board[i][j];
+		return score
 	# Returns piece on the board.
 	# 0 for no pieces, 1 for player 1, 2 for player 2.
 	# None for coordinate out of scope.
@@ -94,6 +111,31 @@ class Game:
                 new_board["Next"] = 3 - self.Next()
 		return Game(board=new_board)
 
+	def choose_bestmove(self,valid_move,this_move,depth):
+		if depth<1:
+    			score=self.Find_score()
+			return score,this_move
+
+
+		best_score=0
+		best_move=None
+		next_player=self.Next()
+    		for current_move in valid_move:
+    			new_board=self.NextBoardPosition(current_move)
+    			new_move=new_board.ValidMoves()
+    			(score,return_move)=new_board.choose_bestmove(new_move,current_move,depth-1)
+    			if new_board.Next()==1:
+    				if score>best_score:
+    					best_score=score
+    					best_move=current_move
+    			else:
+    				if score<best_score:
+    					best_score=score
+    					best_move=current_move
+    		return best_score,current_move
+
+
+
 # Returns piece on the board.
 # 0 for no pieces, 1 for player 1, 2 for player 2.
 # None for coordinate out of scope.
@@ -150,6 +192,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         self.pickMove(g)
 
 
+
     def pickMove(self, g):
     	# Gets all valid moves.
     	valid_moves = g.ValidMoves()
@@ -161,7 +204,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 # TO STEP STUDENTS:
                 # You'll probably want to change how this works, to do something
                 # more clever than just picking a random move.
-	    	move = random.choice(valid_moves)
+	    	(best_score,move) = g.choose_bestmove(valid_moves,{'Where':None},3)
     		self.response.write(PrettyMove(move))
 
 app = webapp2.WSGIApplication([
