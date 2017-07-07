@@ -6,6 +6,15 @@ import json
 import logging
 import random
 import webapp2
+w=[0.5,1,2,5,-3,10]
+score_board=[[w[5],w[4],w[3],w[3],w[3],w[3],w[4],w[5]],
+			[w[4],w[4],w[2],w[2],w[2],w[2],w[4],w[4]],
+			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
+			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
+			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
+			[w[3],w[2],w[1],w[1],w[1],w[1],w[2],w[3]],
+			[w[4],w[4],w[2],w[2],w[2],w[2],w[4],w[4]],
+			[w[5],w[4],w[3],w[3],w[3],w[3],w[4],w[5]]]
 
 # Reads json description of the board and provides simple interface.
 class Game:
@@ -20,19 +29,35 @@ class Game:
 
 	#Evaluate score for Player1 to win the game
 	def Find_score(self):
-		score_board=[[5,-2,3,2,2,3,-2,5],
-					[-2,-2,3,2,2,3,-2,-2],
-					[3,3,3,1,1,3,3,3],
-					[2,2,1,1,1,1,2,2],
-					[2,2,1,1,1,1,2,2],
-					[3,3,3,1,1,3,3,3],
-					[-2,-2,3,2,2,3,-2,-2],
-					[5,-2,3,2,2,3,-2,5]]
+		
 		score=0
 		for i in range(8):
 			for j in range(8):
 				if self._board['Pieces'][i][j]==1:
 					score+=score_board[i][j];
+				if self._board['Pieces'][i][j]==2:
+					score-=score_board[i][j];
+		if self._board['Pieces'][0][0]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==1):
+			score+=2
+		if self._board['Pieces'][0][7]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][0]==1):
+			score+=2
+		if self._board['Pieces'][7][0]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][7]==1):
+			score+=2
+		if self._board['Pieces'][7][7]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==1):
+			score+=2
+		if self._board['Pieces'][0][0]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==2):
+			score-=2
+		if self._board['Pieces'][0][7]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][0]==2):
+			score-=2
+		if self._board['Pieces'][7][0]==1 and (self._board['Pieces'][0][0]==1 or self._board['Pieces'][7][7]==2):
+			score-=2
+		if self._board['Pieces'][7][7]==1 and (self._board['Pieces'][0][7]==1 or self._board['Pieces'][7][0]==2):
+			score-=2
+		valid_moves=self.ValidMoves()
+		if self.Next()==1:
+			score+=w[0]*len(valid_moves)
+		else:
+			score-=w[0]*len(valid_moves)
 		return score
 	# Returns piece on the board.
 	# 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -111,28 +136,61 @@ class Game:
                 new_board["Next"] = 3 - self.Next()
 		return Game(board=new_board)
 
-	def choose_bestmove(self,valid_move,this_move,depth):
-		if depth<1:
+	def choose_bestmove_recursive(self,valid_moves,depth):
+		
+
+		if depth==1:
     			score=self.Find_score()
-			return score,this_move
+			return score
 
-
-		best_score=0
-		best_move=None
+		
 		next_player=self.Next()
-    		for current_move in valid_move:
-    			new_board=self.NextBoardPosition(current_move)
-    			new_move=new_board.ValidMoves()
-    			(score,return_move)=new_board.choose_bestmove(new_move,current_move,depth-1)
-    			if new_board.Next()==1:
+		if next_player==1:
+			best_score=-9999
+		elif next_player==2:
+			best_score=9999
+		
+		if len(valid_moves)!=0:
+    			for current_move in valid_moves:
+    				new_board=self.NextBoardPosition(current_move)
+    				new_valid_moves=new_board.ValidMoves()
+    				score=new_board.choose_bestmove_recursive(new_valid_moves,depth-1)
+    				if next_player==1:
+    					if score>best_score:
+    						best_score=score
+    					
+    				else:
+    					if score<best_score:
+    						best_score=score
+    		else:
+    			new_board=self
+    			new_board._board['Next']=3-new_board._board['Next']
+    			new_valid_moves=new_board.ValidMoves()
+    			return new_board.choose_bestmove_recursive(new_valid_moves,depth-1)
+
+
+    		return best_score
+
+    	def choose_bestmove(self,valid_moves,depth):
+    		next_player=self.Next()
+ 		if next_player==1:
+			best_score=-9999
+		elif next_player==2:
+			best_score=9999
+		best_move=None   		
+    		for move in valid_moves:
+    			new_board=self.NextBoardPosition(move)
+    			new_valid_moves=new_board.ValidMoves()
+    			score=new_board.choose_bestmove_recursive(new_valid_moves,depth-1)
+    			if next_player==1:
     				if score>best_score:
     					best_score=score
-    					best_move=current_move
+    					best_move=move
     			else:
     				if score<best_score:
     					best_score=score
-    					best_move=current_move
-    		return best_score,current_move
+    					best_move=move
+    		return best_move
 
 
 
@@ -201,11 +259,11 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
     		self.response.write("PASS")
     	else:
     		# Chooses a valid move randomly if available.
-                # TO STEP STUDENTS:
-                # You'll probably want to change how this works, to do something
-                # more clever than just picking a random move.
-	    	(best_score,move) = g.choose_bestmove(valid_moves,{'Where':None},3)
-    		self.response.write(PrettyMove(move))
+         # TO STEP STUDENTS:
+         # You'll probably want to change how this works, to do something
+         # more clever than just picking a random move.
+         best_move = g.choose_bestmove(valid_moves,3)
+         self.response.write(PrettyMove(best_move))
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
